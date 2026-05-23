@@ -10,3 +10,5 @@ build/
 *.g.dart
 
 firebase-service-account.json
+
+create mode 100644 mobile/android/app/google-services.json
