@@ -8,3 +8,5 @@ __pycache__/
 # Flutter build
 build/
 *.g.dart
+
+firebase-service-account.json

@@ -7,6 +7,7 @@ from datetime import datetime
 from data.kis_api import get_domestic_ohlcv, get_overseas_ohlcv, get_account_balance
 from data.binance_api import get_crypto_ohlcv_long
 from turtle_system.signals import generate_signals
+from .fcm import send_notification
 
 # 모니터링 종목 리스트 (커스텀 가능)
 DOMESTIC_WATCHLIST = [
@@ -102,6 +103,21 @@ def run_full_scan() -> list[dict]:
         raise
 
     print(f"[{datetime.now()}] 스캔 완료 — 신호 {len(all_signals)}개")
+
+    # 진입 신호 있으면 푸시 알림 발송
+    entry_signals = [s for s in all_signals if 'entry' in s['signal']]
+    if entry_signals:
+        symbols = list({s['symbol'] for s in entry_signals})
+        direction_map = {'entry_long': '매수', 'entry_short': '매도'}
+        details = [
+            f"{s['symbol']} {direction_map.get(s['signal'], s['signal'])} (S{s['system']})"
+            for s in entry_signals[:3]
+        ]
+        body = ', '.join(details)
+        if len(entry_signals) > 3:
+            body += f' 외 {len(entry_signals) - 3}개'
+        send_notification('🐢 터틀 매매 신호 발생', body)
+
     return all_signals
 
 

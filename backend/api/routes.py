@@ -7,12 +7,27 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 from .scanner import run_full_scan, get_cached_signals
+from .fcm import save_token
 from data.kis_api import get_domestic_ohlcv, get_overseas_ohlcv
 from data.upbit_api import get_crypto_ohlcv
 from data.binance_api import get_crypto_ohlcv_long
 from turtle_system.signals import generate_signals
 
 router = APIRouter()
+
+
+# ── FCM 토큰 등록 ─────────────────────────────────────────
+
+
+class DeviceTokenRequest(BaseModel):
+    token: str
+
+
+@router.post("/device/token")
+def register_device_token(req: DeviceTokenRequest):
+    """앱에서 FCM 토큰 등록/갱신"""
+    save_token(req.token)
+    return {"message": "토큰 등록 완료"}
 
 
 # ── 신호 조회 ────────────────────────────────────────────

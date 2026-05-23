@@ -109,6 +109,21 @@ class ApiService {
     return List<Map<String, dynamic>>.from(data['items']);
   }
 
+  static Future<void> registerFcmToken(String token) async {
+    try {
+      final base = await getBaseUrl();
+      await http
+          .post(
+            Uri.parse('$base/api/v1/device/token'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'token': token}),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // 서버 미연결 시 무시 — 다음 앱 실행 시 재시도
+    }
+  }
+
   static Future<bool> checkHealth() async {
     try {
       final base = await getBaseUrl();
