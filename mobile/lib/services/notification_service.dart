@@ -47,7 +47,8 @@ class NotificationService {
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     await _localNotifications.initialize(
-      const InitializationSettings(android: androidSettings),
+      //const InitializationSettings(android: androidSettings),
+      settings: const InitializationSettings(android: androidSettings),
     );
 
     // 포그라운드 메시지 → 로컬 알림으로 표시
@@ -78,17 +79,17 @@ class NotificationService {
     if (notification == null) return;
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDesc,
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+     id: notification.hashCode,
+  title: notification.title,
+  body: notification.body,
+  notificationDetails: const NotificationDetails(
+    android: AndroidNotificationDetails(
+      _channelId,
+      _channelName,
+      channelDescription: _channelDesc,
+      importance: Importance.high,
+      priority: Priority.high,
+       icon: '@mipmap/ic_launcher',
         ),
       ),
     );

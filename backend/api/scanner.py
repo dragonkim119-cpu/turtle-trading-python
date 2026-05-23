@@ -4,7 +4,10 @@ import os
 import tempfile
 from datetime import datetime
 
-from data.kis_api import get_domestic_ohlcv, get_overseas_ohlcv, get_account_balance
+from data.kis_api import (
+    get_domestic_ohlcv, get_overseas_ohlcv, get_account_balance,
+    get_domestic_current_price, get_overseas_current_price,
+)
 from data.binance_api import get_crypto_ohlcv_long
 from turtle_system.signals import generate_signals
 from .fcm import send_notification
@@ -59,7 +62,8 @@ def run_full_scan() -> list[dict]:
             df = get_domestic_ohlcv(symbol, days=100)
             if df.empty:
                 continue
-            signals = generate_signals(symbol, "domestic", df, balance)
+            cur_price = get_domestic_current_price(symbol)
+            signals = generate_signals(symbol, "domestic", df, balance, current_price=cur_price)
             all_signals.extend([s.to_dict() for s in signals])
         except Exception as e:
             print(f"[WARN] {symbol} 국내주식 오류: {e}")
@@ -70,12 +74,14 @@ def run_full_scan() -> list[dict]:
             df = get_overseas_ohlcv(item["symbol"], item["exchange"], days=100)
             if df.empty:
                 continue
-            signals = generate_signals(item["symbol"], "overseas", df, balance)
+            cur_price = get_overseas_current_price(item["symbol"], item["exchange"])
+            signals = generate_signals(item["symbol"], "overseas", df, balance, current_price=cur_price)
             all_signals.extend([s.to_dict() for s in signals])
         except Exception as e:
             print(f"[WARN] {item['symbol']} 해외주식 오류: {e}")
 
     # 가상자산 스캔 (Binance USD 기준 — fx_rate 환율 적용)
+    # 오늘 미완성 캔들의 close = 현재 실시간 가격 (Binance mark price)
     for symbol in CRYPTO_WATCHLIST:
         try:
             df = get_crypto_ohlcv_long(symbol, days=100)

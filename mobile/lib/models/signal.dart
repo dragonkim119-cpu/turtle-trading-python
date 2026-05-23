@@ -3,7 +3,8 @@ class TurtleSignal {
   final String assetType;
   final int system;
   final String signal;
-  final double price;
+  final double price;       // 신호 기준가 (OHLCV 종가)
+  final double currentPrice; // 실시간 현재가
   final double atr;
   final double stopLoss;
   final dynamic unitSize;
@@ -16,6 +17,7 @@ class TurtleSignal {
     required this.system,
     required this.signal,
     required this.price,
+    required this.currentPrice,
     required this.atr,
     required this.stopLoss,
     required this.unitSize,
@@ -29,6 +31,7 @@ class TurtleSignal {
         system: j['system'],
         signal: j['signal'],
         price: (j['price'] as num).toDouble(),
+        currentPrice: ((j['current_price'] ?? j['price']) as num).toDouble(),
         atr: (j['atr'] as num).toDouble(),
         stopLoss: (j['stop_loss'] as num).toDouble(),
         unitSize: j['unit_size'],

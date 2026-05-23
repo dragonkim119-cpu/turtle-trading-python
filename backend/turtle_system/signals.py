@@ -16,12 +16,13 @@ class TurtleSignal:
     asset_type: str        # "domestic", "overseas", "crypto"
     system: int            # 1 or 2
     signal: str            # "entry_long", "entry_short", "exit_long", "exit_short", "pyramid"
-    price: float
+    price: float           # 신호 생성 기준가 (OHLCV 종가)
     atr: float
     stop_loss: float
     unit_size: int
     pyramid_targets: list[float]
     generated_at: datetime
+    current_price: float = 0.0  # 실시간 현재가 (0이면 price로 대체)
 
     @property
     def isEntry(self) -> bool:
@@ -38,6 +39,7 @@ class TurtleSignal:
             "system": self.system,
             "signal": self.signal,
             "price": self.price,
+            "current_price": self.current_price if self.current_price > 0 else self.price,
             "atr": round(self.atr, 4),
             "stop_loss": round(self.stop_loss, 4),
             "unit_size": self.unit_size,
@@ -51,6 +53,7 @@ def generate_signals(
     asset_type: str,
     df: pd.DataFrame,
     account_balance: float = 10_000_000,
+    current_price: float = 0.0,
 ) -> list[TurtleSignal]:
     """OHLCV 데이터로 터틀 신호 생성
 
@@ -96,6 +99,7 @@ def generate_signals(
                 stop_loss=calc_stop_loss(price, atr, "long"),
                 unit_size=unit_size,
                 pyramid_targets=calc_pyramid_prices(price, atr, "long"),
+                current_price=current_price,
                 generated_at=now,
             ))
 
@@ -113,6 +117,7 @@ def generate_signals(
                 stop_loss=calc_stop_loss(price, atr, "short"),
                 unit_size=unit_size,
                 pyramid_targets=calc_pyramid_prices(price, atr, "short"),
+                current_price=current_price,
                 generated_at=now,
             ))
 
@@ -122,6 +127,7 @@ def generate_signals(
                 symbol=symbol, asset_type=asset_type, system=system,
                 signal="exit_long", price=price, atr=atr,
                 stop_loss=0, unit_size=0, pyramid_targets=[],
+                current_price=current_price,
                 generated_at=now,
             ))
         elif latest.get(f"{prefix}_exit_short", False):
@@ -129,6 +135,7 @@ def generate_signals(
                 symbol=symbol, asset_type=asset_type, system=system,
                 signal="exit_short", price=price, atr=atr,
                 stop_loss=0, unit_size=0, pyramid_targets=[],
+                current_price=current_price,
                 generated_at=now,
             ))
 

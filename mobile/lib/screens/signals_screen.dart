@@ -196,7 +196,7 @@ class _SignalCard extends StatelessWidget {
             Text(signal.symbol,
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _row('현재가', fmt.format(signal.price)),
+            _row('현재가', fmt.format(signal.currentPrice)),
             _row('ATR(20)', fmt.format(signal.atr)),
             if (signal.stopLoss > 0) _row('손절가', fmt.format(signal.stopLoss),
                 valueColor: Colors.red),

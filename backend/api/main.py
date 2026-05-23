@@ -21,8 +21,8 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api/v1")
 
-# 매일 장 마감 후 자동 스캔 (평일 오후 4시)
-scheduler = BackgroundScheduler()
+# 매일 장 마감 후 자동 스캔 (평일 오후 4시 KST)
+scheduler = BackgroundScheduler(timezone="Asia/Seoul")
 scheduler.add_job(run_full_scan, "cron", day_of_week="mon-fri", hour=16, minute=0)
 scheduler.start()
 

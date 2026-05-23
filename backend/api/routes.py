@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 
 from .scanner import run_full_scan, get_cached_signals
 from .fcm import save_token
-from data.kis_api import get_domestic_ohlcv, get_overseas_ohlcv
-from data.upbit_api import get_crypto_ohlcv
+from data.kis_api import (
+    get_domestic_ohlcv, get_overseas_ohlcv,
+    get_domestic_current_price, get_overseas_current_price,
+)
 from data.binance_api import get_crypto_ohlcv_long
 from turtle_system.signals import generate_signals
 
@@ -74,13 +76,16 @@ class SingleScanRequest(BaseModel):
 @router.post("/signals/single")
 def scan_single(req: SingleScanRequest):
     """단일 종목 즉시 신호 조회"""
+    cur_price = 0.0
     try:
         if req.asset_type == "domestic":
             df = get_domestic_ohlcv(req.symbol, days=100)
+            cur_price = get_domestic_current_price(req.symbol)
         elif req.asset_type == "overseas":
             df = get_overseas_ohlcv(req.symbol, req.exchange, days=100)
+            cur_price = get_overseas_current_price(req.symbol, req.exchange)
         elif req.asset_type == "crypto":
-            df = get_crypto_ohlcv(req.symbol, days=100)
+            df = get_crypto_ohlcv_long(req.symbol, days=100)
         else:
             raise HTTPException(status_code=400, detail="asset_type 오류: domestic | overseas | crypto")
     except Exception as e:
@@ -89,7 +94,7 @@ def scan_single(req: SingleScanRequest):
     if df.empty:
         raise HTTPException(status_code=404, detail="데이터 없음")
 
-    signals = generate_signals(req.symbol, req.asset_type, df, req.account_balance)
+    signals = generate_signals(req.symbol, req.asset_type, df, req.account_balance, current_price=cur_price)
     return {
         "symbol": req.symbol,
         "count": len(signals),
@@ -170,7 +175,7 @@ def get_chart_data(asset_type: str, symbol: str, exchange: str = "NAS", days: in
         elif asset_type == "overseas":
             df = get_overseas_ohlcv(symbol, exchange, days)
         elif asset_type == "crypto":
-            df = get_crypto_ohlcv(symbol, days)
+            df = get_crypto_ohlcv_long(symbol, days)
         else:
             raise HTTPException(status_code=400, detail="asset_type 오류")
     except Exception as e:

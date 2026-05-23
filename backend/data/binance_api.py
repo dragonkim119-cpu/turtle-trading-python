@@ -90,6 +90,4 @@ def get_crypto_ohlcv_long(
         return df
 
     df = df.sort_values("date").reset_index(drop=True)
-    # 오늘 미완성 캔들 제거
-    df = df[df["date"].dt.date < datetime.now().date()]
     return df

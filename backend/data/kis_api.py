@@ -172,6 +172,34 @@ def get_overseas_ohlcv(symbol: str, exchange: str = "NAS", days: int = 100) -> p
     return df.tail(days)
 
 
+def get_domestic_current_price(symbol: str) -> float:
+    """국내주식 현재가 조회"""
+    try:
+        data = _get(
+            f"{BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price",
+            "FHKST01010100",
+            {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": symbol},
+        )
+        price = float(data.get("output", {}).get("stck_prpr") or 0)
+        return price if price > 0 else 0.0
+    except Exception:
+        return 0.0
+
+
+def get_overseas_current_price(symbol: str, exchange: str = "NAS") -> float:
+    """해외주식 현재가 조회"""
+    try:
+        data = _get(
+            f"{BASE_URL}/uapi/overseas-price/v1/quotations/price",
+            "HHDFS00000300",
+            {"AUTH": "", "EXCD": exchange, "SYMB": symbol},
+        )
+        price = float(data.get("output", {}).get("last") or 0)
+        return price if price > 0 else 0.0
+    except Exception:
+        return 0.0
+
+
 def get_account_balance() -> float:
     """계좌 예수금 조회. 실패 시 DEFAULT_BALANCE 반환 (모의투자 미지원)."""
     if not IS_REAL:
