@@ -1,10 +1,11 @@
 """전종목 터틀 신호 스캔 — 장 마감 후 실행"""
 import json
 import os
+import tempfile
 from datetime import datetime
 
 from data.kis_api import get_domestic_ohlcv, get_overseas_ohlcv, get_account_balance
-from data.upbit_api import get_crypto_ohlcv
+from data.binance_api import get_crypto_ohlcv_long
 from turtle_system.signals import generate_signals
 
 # 모니터링 종목 리스트 (커스텀 가능)
@@ -73,10 +74,10 @@ def run_full_scan() -> list[dict]:
         except Exception as e:
             print(f"[WARN] {item['symbol']} 해외주식 오류: {e}")
 
-    # 가상자산 스캔
+    # 가상자산 스캔 (Binance USD 기준 — fx_rate 환율 적용)
     for symbol in CRYPTO_WATCHLIST:
         try:
-            df = get_crypto_ohlcv(symbol, days=100)
+            df = get_crypto_ohlcv_long(symbol, days=100)
             if df.empty:
                 continue
             signals = generate_signals(symbol, "crypto", df, balance)
@@ -84,10 +85,21 @@ def run_full_scan() -> list[dict]:
         except Exception as e:
             print(f"[WARN] {symbol} 가상자산 오류: {e}")
 
-    # 캐시 저장
-    os.makedirs(os.path.dirname(SIGNALS_CACHE_PATH), exist_ok=True)
-    with open(SIGNALS_CACHE_PATH, "w", encoding="utf-8") as f:
-        json.dump({"updated_at": datetime.now().isoformat(), "signals": all_signals}, f, ensure_ascii=False, indent=2)
+    # 캐시 저장 (atomic write — 읽는 중 손상 방지)
+    cache_dir = os.path.dirname(SIGNALS_CACHE_PATH)
+    os.makedirs(cache_dir, exist_ok=True)
+    payload = json.dumps(
+        {"updated_at": datetime.now().isoformat(), "signals": all_signals},
+        ensure_ascii=False, indent=2
+    )
+    fd, tmp_path = tempfile.mkstemp(dir=cache_dir, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(payload)
+        os.replace(tmp_path, SIGNALS_CACHE_PATH)  # atomic on same filesystem
+    except Exception:
+        os.unlink(tmp_path)
+        raise
 
     print(f"[{datetime.now()}] 스캔 완료 — 신호 {len(all_signals)}개")
     return all_signals

@@ -6,30 +6,56 @@ import '../models/signal.dart';
 
 class ApiService {
   static const _defaultUrl = 'http://10.0.2.2:8000';
+  static const _defaultBalance = 100000000.0;
   static String? _cachedUrl;
+  static double? _cachedBalance;
 
   static Future<File> _configFile() async {
     final dir = await getApplicationDocumentsDirectory();
     return File('${dir.path}/turtle_config.json');
   }
 
-  static Future<String> getBaseUrl() async {
-    if (_cachedUrl != null) return _cachedUrl!;
+  static Future<Map<String, dynamic>> _loadConfig() async {
     try {
       final file = await _configFile();
       if (await file.exists()) {
-        final data = jsonDecode(await file.readAsString());
-        _cachedUrl = data['base_url'] ?? _defaultUrl;
-        return _cachedUrl!;
+        return jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       }
     } catch (_) {}
-    return _defaultUrl;
+    return {};
+  }
+
+  static Future<void> _saveConfig(Map<String, dynamic> data) async {
+    final file = await _configFile();
+    await file.writeAsString(jsonEncode(data));
+  }
+
+  static Future<String> getBaseUrl() async {
+    if (_cachedUrl != null) return _cachedUrl!;
+    final cfg = await _loadConfig();
+    _cachedUrl = cfg['base_url'] as String? ?? _defaultUrl;
+    return _cachedUrl!;
   }
 
   static Future<void> setBaseUrl(String url) async {
     _cachedUrl = url;
-    final file = await _configFile();
-    await file.writeAsString(jsonEncode({'base_url': url}));
+    final cfg = await _loadConfig();
+    cfg['base_url'] = url;
+    await _saveConfig(cfg);
+  }
+
+  static Future<double> getBalance() async {
+    if (_cachedBalance != null) return _cachedBalance!;
+    final cfg = await _loadConfig();
+    _cachedBalance = (cfg['balance'] as num?)?.toDouble() ?? _defaultBalance;
+    return _cachedBalance!;
+  }
+
+  static Future<void> setBalance(double balance) async {
+    _cachedBalance = balance;
+    final cfg = await _loadConfig();
+    cfg['balance'] = balance;
+    await _saveConfig(cfg);
   }
 
   static Future<List<TurtleSignal>> getSignals({

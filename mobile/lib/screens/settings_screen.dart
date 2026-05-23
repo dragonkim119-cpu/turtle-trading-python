@@ -9,18 +9,21 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _urlCtrl = TextEditingController();
+  final _balanceCtrl = TextEditingController();
   bool _healthy = false;
   bool _checking = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUrl();
+    _load();
   }
 
-  Future<void> _loadUrl() async {
+  Future<void> _load() async {
     final url = await ApiService.getBaseUrl();
+    final balance = await ApiService.getBalance();
     _urlCtrl.text = url;
+    _balanceCtrl.text = balance.toStringAsFixed(0);
     _checkHealth();
   }
 
@@ -32,10 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _save() async {
     await ApiService.setBaseUrl(_urlCtrl.text.trim());
+    final bal = double.tryParse(_balanceCtrl.text.replaceAll(',', ''));
+    if (bal != null && bal > 0) await ApiService.setBalance(bal);
     await _checkHealth();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_healthy ? '서버 연결 성공' : '서버 연결 실패')),
+        SnackBar(content: Text(_healthy ? '저장 완료 & 서버 연결됨' : '저장 완료 (서버 연결 실패)')),
       );
     }
   }
@@ -49,6 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 서버 URL
             const Text('백엔드 서버 URL',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
@@ -57,17 +63,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'http://192.168.0.x:8000',
-                helperText: '같은 WiFi: PC의 IP 주소 입력 / 에뮬레이터: http://10.0.2.2:8000',
+                helperText: '같은 WiFi: PC IP 입력 / 에뮬레이터: http://10.0.2.2:8000',
               ),
               keyboardType: TextInputType.url,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+
+            // 운용 계좌잔고
+            const Text('운용 계좌잔고 (원)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _balanceCtrl,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: '100000000',
+                helperText: '포지션 수량 계산 기준 (ATR × 1% = 1유닛 리스크)',
+                suffixText: '원',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+
+            // 저장 버튼
             Row(
               children: [
                 ElevatedButton(onPressed: _save, child: const Text('저장 & 연결 확인')),
                 const SizedBox(width: 12),
-                if (_checking) const SizedBox(width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
+                if (_checking)
+                  const SizedBox(width: 20, height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
                 else Row(
                   children: [
                     Icon(
@@ -80,6 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),

@@ -1,4 +1,9 @@
 """터틀 포지션 사이징 — ATR 기반 유닛 계산"""
+import os
+
+# 환율: KRW/USD (해외주식·가상자산 ATR이 USD 기준일 때 사용)
+# .env 에서 KRW_USD_RATE=1380 형태로 오버라이드 가능
+KRW_USD_RATE = float(os.getenv("KRW_USD_RATE", "1380"))
 
 
 def calc_unit_size(
@@ -7,6 +12,7 @@ def calc_unit_size(
     price: float,
     risk_pct: float = 0.01,
     is_crypto: bool = False,
+    fx_rate: float = 1.0,
 ) -> float:
     """1유닛 수량 계산
 
@@ -14,11 +20,13 @@ def calc_unit_size(
     기본 리스크: 계좌의 1%
 
     Args:
-        account_balance: 계좌 총 잔고
-        atr: ATR(20) 값
+        account_balance: 계좌 총 잔고 (국내=KRW, 해외/가상자산=KRW라도 fx_rate로 변환)
+        atr: ATR(20) 값 (국내=KRW, 해외/가상자산=USD)
         price: 현재 가격
         risk_pct: 유닛당 리스크 비율 (기본 1%)
         is_crypto: True면 소수점 4자리 (BTC 0.0001단위), False면 정수 (주식)
+        fx_rate: 계좌통화 → ATR통화 환율 (국내=1.0, 해외/가상자산=KRW_USD_RATE)
+                 account_balance_in_atr_currency = account_balance / fx_rate
 
     Returns:
         매수 수량. 0이면 진입 불가.
@@ -26,7 +34,10 @@ def calc_unit_size(
     if atr <= 0 or price <= 0:
         return 0
 
-    unit = (account_balance * risk_pct) / atr
+    # 계좌잔고를 ATR과 같은 통화 단위로 변환
+    balance_in_atr_ccy = account_balance / fx_rate
+
+    unit = (balance_in_atr_ccy * risk_pct) / atr
 
     if is_crypto:
         unit = round(unit, 4)  # 업비트 최소 단위

@@ -18,6 +18,11 @@ BASE_URL = "https://openapi.koreainvestment.com:9443" if IS_REAL else "https://o
 _token_cache: dict = {}
 
 
+def _clear_token() -> None:
+    """토큰 캐시 초기화 (401 수신 시 호출)"""
+    _token_cache.clear()
+
+
 def get_access_token() -> str:
     """액세스 토큰 발급 (캐시 사용)"""
     now = datetime.now()
@@ -40,6 +45,8 @@ def get_access_token() -> str:
 
 
 def _headers(tr_id: str) -> dict:
+    # KIS API 필수 구조: appkey/appsecret 매 요청 헤더 포함
+    # 로그/프록시 노출 위험 → BASE_URL이 반드시 HTTPS여야 함 (현재 설정 확인됨)
     return {
         "content-type": "application/json",
         "authorization": f"Bearer {get_access_token()}",
@@ -47,6 +54,16 @@ def _headers(tr_id: str) -> dict:
         "appsecret": APP_SECRET,
         "tr_id": tr_id,
     }
+
+
+def _get(url: str, tr_id: str, params: dict) -> dict:
+    """GET 요청 + 401 시 토큰 갱신 후 1회 재시도"""
+    resp = requests.get(url, headers=_headers(tr_id), params=params)
+    if resp.status_code == 401:
+        _clear_token()
+        resp = requests.get(url, headers=_headers(tr_id), params=params)
+    resp.raise_for_status()
+    return resp.json()
 
 
 def get_domestic_ohlcv(symbol: str, days: int = 100) -> pd.DataFrame:
@@ -67,10 +84,10 @@ def get_domestic_ohlcv(symbol: str, days: int = 100) -> pd.DataFrame:
         end_str = end_date.strftime("%Y%m%d")
         start_str = (end_date - timedelta(days=120)).strftime("%Y%m%d")
 
-        resp = requests.get(
+        data = _get(
             f"{BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice",
-            headers=_headers("FHKST03010100"),
-            params={
+            "FHKST03010100",
+            {
                 "FID_COND_MRKT_DIV_CODE": "J",
                 "FID_INPUT_ISCD": symbol,
                 "FID_INPUT_DATE_1": start_str,
@@ -79,8 +96,7 @@ def get_domestic_ohlcv(symbol: str, days: int = 100) -> pd.DataFrame:
                 "FID_ORG_ADJ_PRC": "0",
             },
         )
-        resp.raise_for_status()
-        raw = resp.json().get("output2", [])
+        raw = data.get("output2", [])
         if not raw:
             break
 
@@ -121,10 +137,10 @@ def get_overseas_ohlcv(symbol: str, exchange: str = "NAS", days: int = 100) -> p
     end = datetime.now().strftime("%Y%m%d")
     start = (datetime.now() - timedelta(days=days * 2)).strftime("%Y%m%d")
 
-    resp = requests.get(
+    data = _get(
         f"{BASE_URL}/uapi/overseas-price/v1/quotations/dailyprice",
-        headers=_headers("HHDFS76240000"),
-        params={
+        "HHDFS76240000",
+        {
             "AUTH": "",
             "EXCD": exchange,
             "SYMB": symbol,
@@ -133,8 +149,7 @@ def get_overseas_ohlcv(symbol: str, exchange: str = "NAS", days: int = 100) -> p
             "MODP": "0",
         },
     )
-    resp.raise_for_status()
-    raw = resp.json().get("output2", [])
+    raw = data.get("output2", [])
 
     records = []
     for item in raw:
@@ -166,10 +181,10 @@ def get_account_balance() -> float:
     acnt_cd = ACCOUNT_NO.split("-")[1] if "-" in ACCOUNT_NO else "01"
 
     try:
-        resp = requests.get(
+        resp_data = _get(
             f"{BASE_URL}/uapi/domestic-stock/v1/trading/inquire-balance",
-            headers=_headers("TTTC8434R"),
-            params={
+            "TTTC8434R",
+            {
                 "CANO": cano,
                 "ACNT_PRDT_CD": acnt_cd,
                 "AFHR_FLPR_YN": "N",
@@ -183,8 +198,7 @@ def get_account_balance() -> float:
                 "CTX_AREA_NK100": "",
             },
         )
-        resp.raise_for_status()
-        data = resp.json().get("output2", {})
+        data = resp_data.get("output2", {})
         if isinstance(data, list):
             data = data[0] if data else {}
         balance = float(data.get("dnca_tot_amt", 0))

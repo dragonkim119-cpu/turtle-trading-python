@@ -31,10 +31,12 @@ def run_test(cfg: dict):
     print(f"현재 ATR(20): {atr:,.4f} USDT  |  최소 권장 계좌: {atr/0.01:,.0f} USDT 상당")
 
     for system in [1, 2]:
-        result = run_backtest(symbol, df, system=system, initial_balance=balance, is_crypto=True)
+        result = run_backtest(symbol, df, system=system, initial_balance=balance, is_crypto=True, asset_type="crypto")
         s = result.summary()
+        longs  = sum(1 for t in result.trades if t.direction == "long")
+        shorts = sum(1 for t in result.trades if t.direction == "short")
         print(
-            f"  System {system} │ 거래:{s['total_trades']:>3}건 │ "
+            f"  System {system} │ 거래:{s['total_trades']:>3}건(롱:{longs}/숏:{shorts}) │ "
             f"수익률:{s['total_return_pct']:>7.2f}% │ "
             f"승률:{s['win_rate']:>5.1f}% │ "
             f"MDD:{s['max_drawdown_pct']:>7.2f}%"

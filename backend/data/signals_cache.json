@@ -1,37 +1,149 @@
 {
-  "updated_at": "2026-05-23T01:08:54.682932",
+  "updated_at": "2026-05-23T10:57:40.478911",
   "signals": [
     {
       "symbol": "AAPL",
       "asset_type": "overseas",
       "system": 1,
       "signal": "entry_long",
-      "price": 310.48,
+      "price": 308.82,
       "atr": 6.2759,
-      "stop_loss": 297.9281,
-      "unit_size": 159338,
+      "stop_loss": 296.2681,
+      "unit_size": 115,
       "pyramid_targets": [
-        313.618,
-        316.7559,
-        319.8939
+        311.958,
+        315.0959,
+        318.2339
       ],
-      "generated_at": "2026-05-23T01:08:49.387946"
+      "generated_at": "2026-05-23T10:57:32.445737"
     },
     {
       "symbol": "AAPL",
       "asset_type": "overseas",
       "system": 2,
       "signal": "entry_long",
-      "price": 310.48,
+      "price": 308.82,
       "atr": 6.2759,
-      "stop_loss": 297.9281,
-      "unit_size": 159338,
+      "stop_loss": 296.2681,
+      "unit_size": 115,
       "pyramid_targets": [
-        313.618,
-        316.7559,
-        319.8939
+        311.958,
+        315.0959,
+        318.2339
       ],
-      "generated_at": "2026-05-23T01:08:49.387946"
+      "generated_at": "2026-05-23T10:57:32.445737"
+    },
+    {
+      "symbol": "KRW-BTC",
+      "asset_type": "crypto",
+      "system": 1,
+      "signal": "entry_short",
+      "price": 75539.5,
+      "atr": 1955.412,
+      "stop_loss": 79450.324,
+      "unit_size": 0.3706,
+      "pyramid_targets": [
+        74561.794,
+        73584.088,
+        72606.382
+      ],
+      "generated_at": "2026-05-23T10:57:37.874985"
+    },
+    {
+      "symbol": "KRW-BTC",
+      "asset_type": "crypto",
+      "system": 2,
+      "signal": "exit_long",
+      "price": 75539.5,
+      "atr": 1955.412,
+      "stop_loss": 0,
+      "unit_size": 0,
+      "pyramid_targets": [],
+      "generated_at": "2026-05-23T10:57:37.874985"
+    },
+    {
+      "symbol": "KRW-ETH",
+      "asset_type": "crypto",
+      "system": 1,
+      "signal": "entry_short",
+      "price": 2065.85,
+      "atr": 71.829,
+      "stop_loss": 2209.508,
+      "unit_size": 10.0884,
+      "pyramid_targets": [
+        2029.9355,
+        1994.021,
+        1958.1065
+      ],
+      "generated_at": "2026-05-23T10:57:38.511094"
+    },
+    {
+      "symbol": "KRW-ETH",
+      "asset_type": "crypto",
+      "system": 2,
+      "signal": "exit_long",
+      "price": 2065.85,
+      "atr": 71.829,
+      "stop_loss": 0,
+      "unit_size": 0,
+      "pyramid_targets": [],
+      "generated_at": "2026-05-23T10:57:38.511094"
+    },
+    {
+      "symbol": "KRW-XRP",
+      "asset_type": "crypto",
+      "system": 1,
+      "signal": "entry_short",
+      "price": 1.3345,
+      "atr": 0.0516,
+      "stop_loss": 1.4378,
+      "unit_size": 14031.1295,
+      "pyramid_targets": [
+        1.3087,
+        1.2829,
+        1.257
+      ],
+      "generated_at": "2026-05-23T10:57:39.226536"
+    },
+    {
+      "symbol": "KRW-XRP",
+      "asset_type": "crypto",
+      "system": 2,
+      "signal": "exit_long",
+      "price": 1.3345,
+      "atr": 0.0516,
+      "stop_loss": 0,
+      "unit_size": 0,
+      "pyramid_targets": [],
+      "generated_at": "2026-05-23T10:57:39.226536"
+    },
+    {
+      "symbol": "KRW-ADA",
+      "asset_type": "crypto",
+      "system": 1,
+      "signal": "entry_short",
+      "price": 0.2424,
+      "atr": 0.0119,
+      "stop_loss": 0.2663,
+      "unit_size": 60639.1365,
+      "pyramid_targets": [
+        0.2364,
+        0.2304,
+        0.2245
+      ],
+      "generated_at": "2026-05-23T10:57:40.477863"
+    },
+    {
+      "symbol": "KRW-ADA",
+      "asset_type": "crypto",
+      "system": 2,
+      "signal": "exit_long",
+      "price": 0.2424,
+      "atr": 0.0119,
+      "stop_loss": 0,
+      "unit_size": 0,
+      "pyramid_targets": [],
+      "generated_at": "2026-05-23T10:57:40.477863"
     }
   ]
 }

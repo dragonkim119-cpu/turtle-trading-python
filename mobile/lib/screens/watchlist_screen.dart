@@ -51,7 +51,8 @@ class _WatchlistScreenState extends State<WatchlistScreen>
         }
       });
 
-      final results = await ApiService.getWatchlistStatus(allItems, 100000000);
+      final balance = await ApiService.getBalance();
+      final results = await ApiService.getWatchlistStatus(allItems, balance);
       final newStatus = <String, Map<String, dynamic>>{};
       for (final r in results) {
         newStatus[r['symbol'] as String] = r;

@@ -1,10 +1,13 @@
 """터틀 트레이딩 신호 생성 — 종목별 매수/매도 신호"""
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
 
+logger = logging.getLogger(__name__)
+
 from .indicators import calc_signals
-from .position import calc_unit_size, calc_stop_loss, calc_pyramid_prices
+from .position import calc_unit_size, calc_stop_loss, calc_pyramid_prices, KRW_USD_RATE
 
 
 @dataclass
@@ -74,7 +77,9 @@ def generate_signals(
 
     price = latest["close"]
     is_crypto = asset_type == "crypto"
-    unit_size = calc_unit_size(account_balance, atr, price, is_crypto=is_crypto)
+    # 해외주식·가상자산(Binance)은 ATR이 USD → 계좌잔고(KRW)를 USD로 환산
+    fx = KRW_USD_RATE if asset_type in ("overseas", "crypto") else 1.0
+    unit_size = calc_unit_size(account_balance, atr, price, is_crypto=is_crypto, fx_rate=fx)
 
     for system in [1, 2]:
         prefix = f"s{system}"
@@ -95,7 +100,9 @@ def generate_signals(
             ))
 
         # 숏 진입 (가상자산/해외주식만)
-        elif latest.get(f"{prefix}_entry_short", False) and asset_type != "domestic":
+        elif latest.get(f"{prefix}_entry_short", False) and asset_type == "domestic":
+            logger.debug("[%s] System%d 숏 신호 감지 — 국내주식 숏 거래 불가, 건너뜀", symbol, system)
+        elif latest.get(f"{prefix}_entry_short", False):
             signals.append(TurtleSignal(
                 symbol=symbol,
                 asset_type=asset_type,

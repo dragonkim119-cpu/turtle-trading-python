@@ -1,7 +1,10 @@
 """API 라우트 정의"""
+import logging
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import List
+
+logger = logging.getLogger(__name__)
 
 from .scanner import run_full_scan, get_cached_signals
 from data.kis_api import get_domestic_ohlcv, get_overseas_ohlcv
@@ -105,7 +108,7 @@ def get_watchlist_status(req: WatchlistStatusRequest):
             elif item.asset_type == "overseas":
                 df = get_overseas_ohlcv(item.symbol, item.exchange, days=100)
             elif item.asset_type == "crypto":
-                df = get_crypto_ohlcv_long(item.symbol, days=200)
+                df = get_crypto_ohlcv_long(item.symbol, days=100)
             else:
                 continue
 
@@ -133,6 +136,7 @@ def get_watchlist_status(req: WatchlistStatusRequest):
                 "signals": [s.to_dict() for s in signals],
             })
         except Exception as e:
+            logger.error("[watchlist-status] %s (%s) 오류: %s", item.symbol, item.asset_type, e, exc_info=True)
             results.append({"symbol": item.symbol, "name": item.name,
                              "asset_type": item.asset_type, "status": "오류", "signals": []})
 
